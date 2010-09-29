@@ -1,0 +1,1510 @@
+#!/usr/bin/perl
+# safety net
+use strict;
+use warnings;
+use Term::ReadKey;
+use Term::ANSIColor;
+$SIG{INT} = 'IGNORE';
+$| = 1;
+
+# ------------------------------------------------------------------------------------------
+                    ## Fushi (Fake User SHell Interface)
+             ## A small teaching program for people new to unix.
+                   ## © 2008 Michael James Brune. All rights Reserved.
+                        ## Copyright (c) 2008, Michael James Brune
+                           ## All rights reserved.
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions are met:
+##     * Redistributions of source code must retain the above copyright
+##       notice, this list of conditions and the following disclaimer.
+##     * Redistributions in binary form must reproduce the above copyright
+##       notice, this list of conditions and the following disclaimer in the
+##       documentation and/or other materials provided with the distribution.
+##     * Neither the name of the Pulpie nor the
+##       names of its contributors may be used to endorse or promote products
+##	derived from this software without specific prior written permission.
+##
+## THIS SOFTWARE IS PROVIDED BY Pulpie ''AS IS'' AND ANY
+## EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+## WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+## DISCLAIMED. IN NO EVENT SHALL Pulpie BE LIABLE FOR ANY
+## DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+## (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+## LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+## ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+## (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+## SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ------------------------------------------------------------------------------------------
+
+## here-doc for cat
+my $catdoc = << 'EOF';
+# Accounting Books
+Charlie - $ 250
+O'Brian - $ 200
+Devin   - $ 100
+Ohlson  - $ 208
+Billy   - $ 305
+Kitty   - $ 535
+Kim     - $ 421
+James   - $ 350
+Nick    - $ 620
+Worsley - $ 230
+Shannon - $ 140
+Jack    - $ 640
+Joe     - $ 930
+Andy    - $ 735
+Mark    - $ 345
+Tom     - $ 094
+Dave    - $ 050
+Titus   - $ 520
+Mike    - $ 603
+Miller  - $ 452
+Rose    - $ 320
+Sam     - $ 763
+Paul	- $ 360
+Jackson - $ 630
+Jane 	- $ 721
+Barry	- $ 860
+Shane	- $ 900
+EOF
+# -------------------------------------------------------------------------------
+
+## here-doc for tail
+my $taildoc = <<'EOF';
+Titus   - $ 520
+Mike    - $ 603
+Miller  - $ 452
+Rose    - $ 320
+Sam     - $ 763
+Paul	- $ 360
+Jackson - $ 630
+Jane 	- $ 721
+Barry	- $ 860
+Shane	- $ 900
+EOF
+# -------------------------------------------------------------------------------
+
+## os
+sub os {
+	los:{
+		print "What operating system would you like to learn?\n\n1. Debian\n2. FreeBSD\n> ";
+		my $os = <STDIN>;
+		if (!defined($os)) { 
+			exit(); 
+		}
+		chomp $os;
+		if ( $os =~ /debian/i or $os =~ "1" ) {
+			print "\n";
+			return $os;
+		}
+		if ( $os =~ /freebsd/i or $os =~ "2" ) {
+			print "\n";
+			return $os;
+		}
+		else {
+			redo los
+		}
+	}
+}
+my $os = os();
+# -------------------------------------------------------------------------------
+
+# subroutines for bash prompt
+sub bash {
+	my ($cwd) = @_;
+	my $hostname = `hostname`; 
+	chomp $hostname;
+	$hostname =~ s/\..*//;
+	if ( $os =~ /freebsd/i or $os =~ "2" ) {
+		print "\n[$ENV{USER}",'@', "$hostname", " ", $cwd, ']$ ';
+	}
+	if ( $os =~ /debian/i or $os =~ "1" ) {
+		print "\n$ENV{USER}",'@', "$hostname", ":", $cwd, '$ ';
+	}
+}
+# -------------------------------------------------------------------------------
+
+## subroutine for simulating write.
+sub simtype {
+  my %lines = map { $_ => 1 } @_;
+  open my $fh, '<', "english" or die "Can't read language file: $!";
+  while (my $line = <$fh>) {
+	print color 'white on_blue';
+    print $line if $lines{$.};
+	print color 'reset';
+  }
+}
+# -------------------------------------------------------------------------------
+
+## menu
+sub menu {
+	simtype (161..162);
+	print "\nMenu:\n\n1. Start (recommended)\n2. Lessons\n3. Credits";
+	meu:{
+		bash "/fushi/menu";
+		my $menu = <STDIN>;  
+		if (!defined($menu)) { 
+			exit(); 
+		}
+		chomp $menu;
+		if ( $menu =~ /start/i or $menu =~ "1" ) {
+			main();
+		}
+		if ( $menu =~ /lessons/i or $menu =~ "2" ) {
+			list:{
+				simtype (163);
+				print "\n\n1. Navigation\n2. Files\n3. Environment\n4. Users\n5. Archives\n6. Internet\n7. Processes\n8. Packages";
+				bash "/fushi/menu";
+				my $lessons = <STDIN>;
+				if (!defined($lessons)) { 
+					exit(); 
+				}
+				chomp $lessons;
+				if ( $lessons =~ /navigation/i or $lessons =~ "1" ) {
+					main();
+				}
+				if ( $lessons =~ /files/i or $lessons =~ "2" ) {
+					copy();
+				}
+				if ( $lessons =~ /environment/i or $lessons =~ "3" ) {
+					chsh();
+				}		
+				if ( $lessons =~ /users/i or $lessons =~ "4" ) {
+					unix();
+				}
+				if ( $lessons =~ /archives/i or $lessons =~ "5" ) {
+					tarup();
+				}
+				if ( $lessons =~ /internet/i or $lessons =~ "6" ) {
+					ifco();
+				}
+				if ( $lessons =~ /processes/i or $lessons =~ "7" ) {
+					ps();
+				}
+				if ( $lessons =~ /ports/i or $lessons =~ "8" ) {
+					if ( $os =~ /freebsd/i or $os =~ "2" ) { 
+						portsnap();
+					}
+					if ( $os =~ /debian/i or $os =~ "1" ) {
+						apt();
+					}
+				}
+				if ( $lessons =~ /back/i ) {
+					print "The commands are:\nstart (recommended)\nlessons\ncredits";
+					redo meu;
+				}
+				if ( $menu eq "exit" ) {
+					print "\n--------NOW LEAVING FUSHI--------\n";
+					exit();
+				}
+				else {
+					redo list;
+				}
+			}
+		}
+		if ( $menu =~ /credits/i or $menu =~ "3" ) {
+			print 'Created by James "Pulpie" Michael http://pulpie.ath.cx jamesthefishy@gmail.com', "\nBeta version: .040";
+			redo meu;
+		}
+		if ( $menu eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "The commands are:\nstart (recommended)\nlessons\ncredits";
+			redo meu;
+		}	
+	}
+}
+menu();
+
+## Lesson One START
+# -------------------------------------------------------------------------------
+## welcome, ls - no files.
+sub main {
+	simtype (1..2);
+	start:{
+		bash "~";
+		my $prompt = <STDIN>;
+		if (!defined($prompt)) { 
+			exit(); 
+		}
+		chomp $prompt;
+		if ( $prompt eq "ls" ) { 
+			mktch(); 
+		}
+		if ( $prompt eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "type 'ls'"; 
+			redo start; 
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## making a directory.
+sub mktch {
+	simtype (3..5);
+	mdir:{
+		bash "~";
+		my $mkdir = <STDIN>;
+		if (!defined($mkdir)) { 
+			exit();
+		}
+		chomp $mkdir;
+		if ( $mkdir eq "mkdir tempdir" ) { 
+			cd(); 
+		}
+		if ( $mkdir eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "type 'mkdir tempdir'"; 
+			redo mdir;
+		}
+	}
+}	
+
+# -------------------------------------------------------------------------------
+## changing directories.
+sub cd {
+	simtype (166);
+	print "cd tempdir";
+	cd:{
+		bash "~";
+		my $cd = <STDIN>;  
+		if (!defined($cd)) { 
+			exit();
+		}
+		chomp $cd;
+		if ( $cd eq "cd tempdir" ) { 
+			touch(); 
+		}
+		if ( $cd eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "'cd tempdir'";
+			redo cd; 
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## Creating a blank file via touch.
+sub touch {
+	simtype (6);
+	touch:{
+		bash "~/tempdir"; 
+		my $touch = <STDIN>;  
+		if (!defined($touch)) { 
+			exit();
+		}
+		chomp $touch;
+		if ( $touch eq "touch tempfile" ) { 
+			ls(); 
+		}
+		if ( $touch eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "run 'touch tempfile'"; 
+			redo touch;
+		}
+ 
+	}
+}
+
+# -------------------------------------------------------------------------------
+## ls - now with files.
+sub ls { 
+	simtype (7);
+	ls:{
+		bash "~/tempdir";
+		my $ls = <STDIN>;  
+		if (!defined($ls)) { 
+			exit();
+		}
+		chomp $ls;
+		if ( $ls eq "ls" ) { 
+			print "tempfile\n"; 
+			pwd(); 
+		}
+		if ( $ls eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "run 'ls'"; 
+			redo ls;
+		} 
+	}
+}
+
+# -------------------------------------------------------------------------------
+## psw, lost?
+sub pwd {
+	simtype (8..10);
+	psw:{
+		bash "~/tempdir";
+		my $pwd = <STDIN>;
+		if (!defined($pwd)) { 
+			exit();
+		}
+		chomp $pwd;
+		if ( $pwd eq "pwd" ) { 
+			print "/home/$ENV{USER}/tempdir\n";
+			man();
+		}
+		if ( $pwd eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "use the 'pwd' command.";
+			redo psw;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## learning about the unix manuals.
+sub man { 
+	simtype (11);
+	mn:{
+		bash "~/tempdir";
+		my $man = <STDIN>;  
+		if (!defined($man)) { 
+			exit();
+		}
+		chomp $man;
+		if ( $man eq "man man" ) { 
+			system("man man"); 
+			copy(); 
+		}
+		if ( $man eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "type 'man man'";
+			redo mn;
+		}
+	}
+}
+
+#LESSON 1 COMPLETE
+#LESSON 2 START
+# -------------------------------------------------------------------------------
+## copying files.
+sub copy {
+	simtype (12..15);
+	copy:{
+		bash "~/tempdir";
+		my $cp = <STDIN>;  
+		if (!defined($cp)) { 
+			exit();
+		}
+		chomp $cp;
+		if ( $cp eq "cp /var/log/acnt.log ./" or $cp eq "cp /var/log/acnt.log ./acnt.log" ) { 
+			tacat(); 
+		}
+		if ( $cp eq "man cp" ) { 
+			system("man cp"); 
+			redo copy;
+		}
+		if ( $cp eq "hint" ) { 
+			simtype (167);
+			print "so 'cp /var/log/acnt.log ./'\n"; 
+			redo copy;
+		}
+		if ( $cp eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "If you need a hint, use the hint command."; 
+			redo copy;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## cat or tail start.
+sub tacat {
+	simtype (16..18);
+	back:{
+		bash "~/tempdir";
+		my $command2 = <STDIN>;  
+		if (!defined($command2)) { 
+			exit();
+		}
+		chomp $command2; 
+		if ( $command2 eq "man cat" ) { 
+			system("man cat");
+			redo back; 
+		}
+		if ( $command2 eq "man tail" ) { 
+			system("man tail"); 
+			redo back; 
+		}
+		if ( $command2 eq "cat acnt.log" ) { 
+			cat(); 
+		}
+		if ( $command2 eq "ls" ) { 
+			print "acnt.log";
+			redo back; 
+		}
+		if ( $command2 eq "tail acnt.log" ) { 
+			tail(); 
+		}
+		if ( $command2 eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "cat or tail acnt.log";
+			redo back; 
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## if you choose cat first, move on to tail.
+sub cat {
+	print $catdoc;
+	simtype (166);
+	print "tail acnt.log";
+	cats:{
+		bash "~/tempdir";
+		my $commands = <STDIN>;  
+		if (!defined($commands)) { 
+			exit();
+		}
+		chomp $commands;  
+		if ( $commands eq "man cat" ) { 
+			system("man cat"); 
+			redo cats;
+		}
+		if ( $commands eq "man tail" ) { 
+			system("man tail"); 
+			redo cats;
+		}
+		if ( $commands eq "ls" ) { 
+			print "acnt.log"; 
+			redo cats;
+		}
+		if ( $commands eq "tail acnt.log" ) { 
+			print $taildoc;
+			grp(); 
+		}
+		if ( $commands eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print '"tail acnt.log"'; 
+			redo cats;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## if you choose tail first, move on to cat.
+sub tail {
+	print $taildoc;
+	simtype (166);
+	print "cat acnt.log";	
+	tail:{
+		bash "~/tempdir";
+		my $command3 = <STDIN>;
+		if (!defined($command3)) { 
+			exit();
+		}
+		chomp $command3; ; 
+		if ( $command3 eq "man cat" ) {
+			system("man cat");
+			redo tail;
+		}
+		if ( $command3 eq "man tail" ) {
+			system("man tail");
+			redo tail;
+		}
+		if ( $command3 eq "ls" ) {
+			print "acnt.log";
+			redo tail;
+		}
+		if ( $command3 eq "cat acnt.log" ) {
+			print $catdoc;
+			grp(); 
+		}
+		if ( $command3 eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print '"cat acnt.log"';
+			redo tail;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## grep, good morning.
+sub grp {
+	simtype (19..21);
+	grap:{
+		print "\n";
+		bash "~/tempdir";
+		my $grep = <STDIN>;
+		if (!defined($grep)) {
+			exit();
+		}
+		chomp $grep;
+		if ( $grep eq "grep Mike acnt.log" ) {
+			print 'Mike    - $ 603', "\n";
+			move();
+		}
+		if ( $grep =~ "grep" ) {
+			system("grep");
+			redo grap
+		}
+		if ( $grep eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print 'Try again, "grep Mike acnt.log" Note capitals always matter.';
+			redo grap
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## moving files
+sub move {
+	simtype (22..23);
+	mve:{
+		bash "~/tempdir";
+		my $mv = <STDIN>;  
+		if (!defined($mv)) { 
+			exit();
+		}
+		chomp $mv;
+		if ( $mv eq "mv /bin/progfile ./" or $mv eq "mv /bin/progfile ./progfile" ) { 
+			review(); 
+		}
+		if ( $mv eq "man mv" ) { 
+			system("man mv"); 
+			redo mve;
+		}
+		if ( $mv eq "hint" ) { 
+			print "mv /bin/progfile ./"; 
+			redo mve;
+		}
+		if ( $mv eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "If you need a hint, use the hint command.";
+			redo mve;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## ls - hal now with details.
+sub review {
+	simtype (24..28);
+	lshal:{
+		bash "~/tempdir";
+		my $lshal = <STDIN>;  
+		if (!defined($lshal)) { 
+			exit();
+		}
+		chomp $lshal; 
+		if ( $lshal eq "ls -hal" ) {
+			print "\ndrwxr-xr-x    3 ", $ENV{USER}, "  ", $ENV{USER}, "   2.5K Aug 30 10:37  .";
+			print "\ndrwxr-xr-x    2 ", $ENV{USER}, "  ", $ENV{USER}, "   512B Aug 21 03:39  ..";
+			print "\n-rwx------    1 ", $ENV{USER}, "  ", $ENV{USER}, "   29B  Oct 22 16:30  acnt.log";
+			print "\n-rwx------    1 root   root    29B Oct 22 16:30   progfile";
+			print "\n-rw-r--r--    1 ", $ENV{USER}, "  ", $ENV{USER}, "   0B  Oct 22 16:24   tempfile\n\n";
+			mman(); 
+		}
+		if ( $lshal eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "Type 'ls -hal'";
+			redo lshal;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## chown, changing owner of progfile.
+sub mman {
+	bash "~/tempdir";
+	simtype (29..31);
+	con:{
+		bash "~/tempdir";
+		my $chown = <STDIN>;  
+		if (!defined($chown)) { 
+			exit();
+		}
+		chomp $chown; 
+		if ( $chown eq "chown $ENV{USER} progfile" ) { 
+			cod(); 
+		}
+		if ( $chown eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "chown $ENV{USER} progfile";
+			redo con;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## chmod, changing the modes of progfile.
+sub cod {
+	simtype (166);
+	print "chmod 700 progfile.";
+	mod:{
+		bash "~/tempdir";
+		my $chmod = <STDIN>;  
+		if (!defined($chmod)) { 
+			exit();
+		}
+		chomp $chmod; 
+		if ( $chmod eq "chmod 700 progfile" ) { 
+			run(); 
+		}
+		if ( $chmod eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "type 'chmod 700 progfile'";
+			redo mod;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## running progfile.
+sub run {
+	simtype (166);
+	print "./progfile";
+	run:{
+		bash "~/tempdir";
+		my $run = <STDIN>;  
+		if (!defined($run)) { 
+			exit();
+		}
+		chomp $run;
+		if ( $run =~ "./progfile" ) { 
+			print "progfile run complete.\n"; 
+			rem(); 
+		}
+		if ( $run eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "run progfile by typing './progfile'";
+			redo run;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## removing own files.
+sub rem {
+	simtype (32..33);
+	reme:{
+		bash "~/tempdir";
+		my $rm = <STDIN>;  
+		if (!defined($rm)) { 
+			exit();
+		}
+		chomp $rm;
+		if ( $rm eq "rm acnt.log" ) { 
+			chsh(); 
+		}
+		if ( $rm eq "man rm" ) { 
+			system("man rm");
+			redo reme;
+		}
+		if ( $rm =~ "rm" ) { 
+			system("rm"); 
+			redo reme;
+		}
+		if ( $rm eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "Use 'rm acnt.log'"; 
+			redo reme;
+		} 
+	}
+}
+
+## Lesson 2 COMPLETE
+## Lesson 3 START
+# -------------------------------------------------------------------------------
+## chsh and yourself.
+sub chsh {
+my $chshdoc = <<'EOF';
+
+Shell: /usr/local/bin/bash
+Full Name: User &
+Office Location:
+Office Phone:
+Home Phone:
+Other information:
+EOF
+	simtype (34..36);
+	uds:{
+		bash "~/tempdir";
+		my $chsh = <STDIN>;  
+		if (!defined($chsh)) { 
+			exit();
+		}
+		chomp $chsh; 
+		if ( $chsh eq "chsh" ) {
+			print "\n#Changing user information for $ENV{USER}.";
+			print $chshdoc, "\n";
+			passwd();
+		}
+		if ( $chsh eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "Type 'chsh'"; 
+			redo uds;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## passwd, running the command.
+sub passwd { 
+	simtype (37..38);
+	pswd:{
+		bash "~/tempdir";
+		my $passwd = <STDIN>;  
+		if (!defined($passwd)) { 
+			exit();
+		}
+		chomp $passwd; 
+		if ( $passwd eq "passwd" ) { 
+			dman();
+		}
+		if ( $passwd eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "use the 'passwd' command.";
+			redo pswd;
+		}
+	}
+}
+
+
+# -------------------------------------------------------------------------------
+## using passwd, changing your password.
+sub dman { 
+	print "\nChanging local password for $ENV{USER}";
+	pad:{
+		ReadMode('noecho');
+		print "\nOld Password: ";
+		print "\nNew Password: "; 
+		chomp(my $pointless = <STDIN>);
+		print "\nRetype New Password: "; 
+		chomp(my $pointless2 = <STDIN>);
+		if ( $pointless eq $pointless2 ) { 
+			ReadMode('normal'); 
+			unix(); 
+		}
+		else { 
+			print "passwords don't match.";
+			redo pad;
+		}
+	}
+}
+
+# Lesson 3 COMPLETE
+# Lesson 4 START
+# -------------------------------------------------------------------------------
+## unix passwords, running adduser.
+sub unix { 
+	print "\n";
+	simtype (39..46);
+	adduser:{
+		bash "~/tempdir";
+		my $user = <STDIN>;  
+		if (!defined($user)) { 
+			exit();
+		}
+		chomp $user;
+		if ( $user eq "adduser" ) { 
+			adduser(); 
+		}
+		if ( $user eq "man adduser" ) { 
+			system("man adduser");
+			redo adduser;
+		}
+		if ( $user eq "hint" ) { 
+			print "type 'adduser'"; 
+			redo adduser;
+		}
+		if ( $user eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "Please focus, use the hint command if needed."; 
+			redo adduser;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## details for new user.
+sub adduser {
+	simtype (168);
+	athos:{
+		print "\nUsername: ";
+		chomp(my $username = <STDIN>);
+		if ( $username eq "athos" ) { 
+			finishme($username); 
+			}
+		else { 
+			print "Username needs to athos."; 
+			redo athos; 
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## confirming new user.
+sub finishme {
+	my $username = shift;
+	print "Full name: "; 
+	chomp(my $name = <STDIN>);
+	print "Uid (Leave empty for default): \n";
+	print "Login group[",$username,"]: "; 
+	chomp(my $group = <STDIN>);
+	print "Login group is $group. Invite into other groups? []: "; 
+	chomp(my $othergroups = <STDIN>);
+	print "Login class [default]: "; 
+	chomp(my $class = <STDIN>);
+	print "Shell (sh csh tcsh prompt bash rbash zsh nologin) [sh]: "; 
+	chomp(my $shell = <STDIN>);
+	print "Home directory [/home/",$username,"]: "; 
+	chomp(my $home = <STDIN>);
+	print "Use password-based authentication? [yes]: \n";
+	pass:{
+		print "Use an empty password? (yes/no) [no]: \n";
+		print "Use a random password? (yes/no) [no]: ";
+		ReadMode('noecho');
+		print "\nEnter password: "; 
+		chomp(my $pass = <STDIN>);
+		print "\nEnter password again: "; 
+		chomp(my $word = <STDIN>);
+		ReadMode('normal');
+		if ( $pass and $word eq "greece" ) { 
+			print "\nLock out the account after creation? [no]: ";
+			print "\nUsername   : ",$username; 
+			print "\nPassword   : *****";
+			print "\nFull Name  : ", $name;
+			print "\nUid        : 1820";
+			print "\nClass      : ", $class;
+			print "\nGroups     : ", $username," ", $othergroups;
+			print "\nHome       : /home/",$username;
+			print "\nShell      : ", $shell;
+			print "\nLocked     : no";
+			print "\nOK? (yes/no): ";
+			print "\nadduser: INFO: Successfully added (",$username,") to the user database.";
+			print "\nGoodbye!\n";
+			if ( $os =~ /freebsd/i or $os =~ "2" ) { 
+				rmuser();
+			}
+			if ( $os =~ /debian/i or $os =~ "1" ) {
+				deluser();
+			}
+		}
+		else { 
+			print "Passwords did not match or were not greece, the requested password.\n"; 
+			redo pass; 
+		} 
+	}
+}
+# -------------------------------------------------------------------------------
+## removing a user for debian.
+sub deluser { 
+	simtype (50..52);
+	deluser:{
+		bash "~/tempdir";
+		my $deluser = <STDIN>;  
+		if (!defined($deluser)) { 
+			exit();
+		}
+		chomp $deluser;
+		if ( $deluser eq "deluser sventek" ) { 
+			print "\nMatching password entry\n\nsventek:*:1320:1320::0:0:User &:/home/sventek:/bin/sh\n\n";
+			confirm:{
+				print "\nIs this the entry you wish to remove? "; 
+				chomp(my $confirm = <STDIN>);
+				if ( $confirm =~ /yes/i or $confirm eq "y" ) { 
+					home(); 
+				}
+				if ( $confirm eq "y" ) { 
+					home(); 
+				}
+				else { 
+				print "type yes"; 
+				redo confirm; 
+				}
+			}
+		}
+		if ( $deluser eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		if ( $deluser eq "man deluser" ) { 
+			system("man deluser"); 
+			redo deluser;
+		}
+		else { 
+			print "type 'deluser sventek'";  
+			redo deluser;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## removing a user for freebsd.
+sub rmuser { 
+	simtype (47..49);
+	rmuser:{
+		bash "~/tempdir";
+		my $rmuser = <STDIN>;  
+		if (!defined($rmuser)) { 
+			exit();
+		}
+		chomp $rmuser;
+		if ( $rmuser eq "rmuser sventek" ) { 
+			print "\nMatching password entry\n\nsventek:*:1320:1320::0:0:User &:/home/sventek:/bin/sh\n\n";
+			confirm:{
+				print "\nIs this the entry you wish to remove? "; 
+				chomp(my $confirm = <STDIN>);
+				if ( $confirm =~ /yes/i or $confirm eq "y" ) { 
+					home(); 
+				}
+				if ( $confirm eq "y" ) { 
+					home(); 
+				}
+				else { 
+				print "type yes"; 
+				redo confirm; 
+				}
+			}
+		}
+		if ( $rmuser eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		if ( $rmuser eq "man deluser" ) { 
+			system("man deluser"); 
+			redo rmuser;
+		}
+		else { 
+			print "type 'rmuser sventek'";  
+			redo rmuser;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## deleting old user home files.
+sub home {
+	home:{
+		print "\nRemove user's home directory (/home/sventek)? "; 
+		chomp(my $home = <STDIN>);
+		if ( $home =~ /yes/i or $home eq "y" ) { 
+			print "\nRemoving user (sventek): mailspool home passwd.\n"; 
+			tarup(); 
+		}
+		else { 
+			print "type yes\n"; 
+			redo home; 
+		}
+	}
+}
+
+# Lesson 4 COMPLETE
+# Lesson 5 START
+# -------------------------------------------------------------------------------
+## creating archive files.
+sub tarup { 
+	simtype (53..56);
+	taru:{
+		bash "~/tempdir";
+		my $tar = <STDIN>;  
+		if (!defined($tar)) { 
+			exit();
+		}
+		chomp $tar;
+		if ( $tar eq "tar -czf temp.tar.gz progfile tempfile" ) { 
+			tardown(); 
+		}
+		if ( $tar eq "man tar" ) { 
+			system("man tar");
+			redo taru;
+		}
+		if ( $tar eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "use 'tar -czf temp.tar.gz progfile tempfile'"; 
+			redo taru;
+		}
+	}
+}	
+
+# -------------------------------------------------------------------------------
+## extracting archives.
+sub tardown {
+	simtype (57..59);
+	tard:{
+		bash "~/tempdir";
+		my $tar = <STDIN>;  
+		if (!defined($tar)) { 
+			exit();
+		}
+		chomp $tar;
+		if ( $tar eq "tar -zxvf temp.tar.gz" ) { 
+			print "x progfile\nx tempfile\n";
+			ifco(); 
+		}
+		if ( $tar eq "man tar" ) { 
+			system("man tar"); 
+			redo tard;
+		}
+		if ( $tar eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "use 'tar -zxvf temp.tar.gz'"; 
+			redo tard;
+		}
+	}
+}
+
+# Lesson 5 COMPLETE
+# Lesson 6 START
+# -------------------------------------------------------------------------------
+## ifconfig
+sub ifco {
+	simtype (60..62);
+	ifconfig:{
+		bash "~/tempdir";
+		my $if = <STDIN>;  
+		if (!defined($if)) { 
+			exit();
+		}
+		chomp $if;
+		if ( $if eq "ifconfig" ) {
+			system("/sbin/ifconfig");
+			game();
+		}
+		if ( $if eq "man ifconfig" ) {
+			system("man ifconfig");
+			redo ifconfig;
+		}
+		if ( $if eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "man ifconfig or type ifconfig";
+			redo ifconfig;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## sftp, port details.
+sub game {
+	simtype (63..65);
+	command:{
+		bash "~";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq 'sftp -oPort=16012 sfrank@afc.com' ) { 
+			print "Connecting to afc.com...\n";
+			password:{
+			print ( "Password: " );
+			ReadMode('noecho');
+			chomp(my $password = <STDIN>);
+			if ( $password eq "darlingducky" ) { 
+				ReadMode('normal'); 
+				sftp(); 
+			}
+			else { 
+				print "\nIncorrect Password\n"; 
+				redo password; 
+				}
+			}
+		}		
+		if ( $command eq "hint" ) { 
+			print 'Use the command "sftp -oPort=16012 sfrank@afc.com"';
+			redo command;
+		}
+		if ( $command eq "man sftp" ) { 
+			system("man sftp"); 
+			redo command;
+		}
+		if ( $command =~ "sftp" ) { 
+			system("sftp");
+			redo command;
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else { 
+			print "Stay on task\nUse the hint command if needed.";
+			redo command;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## inside a different server, getting a file.
+sub sftp {
+	sftp:{
+		print "\nsftp> "; 
+		my $sftp = <STDIN>;  
+		if (!defined($sftp)) { 
+			exit();
+		}
+		chomp $sftp;
+		if ( $sftp eq "ls" ) { 
+			print "acnt.log  htop.core  rc.conf"; 
+			redo sftp; 
+		}
+		if ( $sftp eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		if ( $sftp eq "get acnt.log" ) { 
+			print "Fetching /usr/home/sfrank/acnt.log to acnt.log\n";
+			sleep 1;
+			print "/usr/home/sfrank/acnt.log                               100% 1295     1.3KB/s   00:00";
+			$| = 1; 
+			sleep 2;
+			sftp2:{
+				print "\nsftp> "; chomp(my $sftp2 = <STDIN>);
+					if ( $sftp2 =~ "exit" ) { 
+						ps();
+					}
+					if ( $sftp2 =~ "bye" ) { 
+						ps();
+					}
+					else { 
+						print "You have finished your job, now leave the server. type exit or bye."; \
+						redo sftp2; 
+					}
+			}
+		}
+		else { 
+			print "get acnt.log"; 
+			redo sftp; 
+		} 
+	}
+}
+
+# Lesson 7 START
+# -------------------------------------------------------------------------------
+## ps process listing
+sub ps {
+	simtype (66..68);
+	pow:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "ps" ) { 
+			print "PID TTY          TIME CMD\n4370 pts/1    00:00:00 prockill\n5007 pts/1    00:00:00 ps\n";
+			kil();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "use 'ps'";
+			redo pow;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## killing processes
+sub kil {
+	simtype (69..70);
+	killed:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "kill 4370" ) { 
+			if ( $os =~ /freebsd/i or $os =~ "2" ) { 
+				portsnap();
+			}
+			if ( $os =~ /debian/i or $os =~ "1" ) {
+				apt();
+			}
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "use 'ps'";
+			redo killed;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## portsnap - fetch
+sub portsnap {
+	simtype (71..72);
+	port:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "portsnap fetch" ) {
+			simtype (73..81);
+			update();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'portsnap fetch'";
+			redo port;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## portsnap - update
+sub update {
+	simtype (82..84);
+	snap:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "portsnap update" ) {
+			simtype (85..104);
+			portupgrade();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'portsnap update'";
+			redo snap;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## portupgrade
+sub portupgrade {
+	simtype (105);
+	portu:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "portupgrade -au" ) {
+			audit();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'portupgrade -au'";
+			redo portu;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## portaudit
+sub audit {
+	simtype (106);
+	portu:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "portaudit -Fa" ) {
+			simtype (107..108);
+			freeupdate();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit;
+		}
+		else {
+			print "type 'portaudit -Fa'";
+			redo portu;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## FreeBSD-update
+sub freeupdate {
+	simtype (109);
+	portu:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "freebsd-update fetch" ) {
+			simtype (110-117);
+			menu();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'freebsd-update fetch'";
+			redo portu;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## apt-get update
+sub apt {
+	simtype (118..119);
+	port:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "apt-get update" ) {
+			simtype (120...146);
+			aptupdate();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'apt-get update'";
+			redo port;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## apt-get upgrade
+sub aptupdate {
+	simtype (147);
+	snap:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "apt-get upgrade" ) {
+			simtype (148..151);
+			dist();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'apt-get upgrade'";
+			redo snap;
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------
+## apt-get dist-upgrade
+sub dist {
+	simtype (152);
+	snap:{
+		bash "~/tempdir";
+		my $command = <STDIN>;  
+		if (!defined($command)) { 
+			exit();
+		}
+		chomp $command;
+		if ( $command eq "apt-get dist-upgrade" ) {
+			simtype (153..158);
+			menu();
+		}
+		if ( $command eq "exit" ) {
+			print "\n--------NOW LEAVING FUSHI--------\n";
+			exit();
+		}
+		else {
+			print "type 'apt-get dist-upgrade'";
+			redo snap;
+		}
+	}
+}

@@ -1,0 +1,168 @@
+Lesson One - Navigation
+Lets start with the basics, type ls. which lists directory contents.
+You're probably wondering why no files showed up, because you have none. 
+mkdir makes a directory and cd changes directory. 
+So lets make some, first mkdir tempdir then cd tempdir
+Now touch tempfile, touch updates time stamps and creates a blank file if the file is not there, 
+Now run the ls command. As you can see you have created a plain file. 
+pwd stands for print working directory, if you ever get lost in your system use it.
+pwd will show you exactly where you're at unlike the bash shell which shows only ~ as home.
+Use the 'pwd' command now.
+There are things called manual pages, the man command will show these pages. type 'man man'. To close a man page hit q
+Lesson Two - Files
+Keep in mind that silence in unix is good.
+cp means copy and we are going to cp a file.
+cp the file /var/log/acnt.log to the current dir. Current dir symbol is ./
+So next we are going to learn cat and tail. 
+Use the cat command to see the full file then use tail to see just the end of the file. 
+run cat or tail on acnt.log which is now in the same directory that you are in. 
+Moving on to grep. Grep is a great tool
+which allows you to search for a a pattern in a file and show it on the screen.
+'grep Mike acnt.log' notice the capital M, unix is always case-sensitive. 
+Lets move a file. Also renaming a file is moving it with a different name.
+The mv command allows you to move around files. 'mv /bin/progfile ./'
+Run 'ls -hal'. -h is human readable sizes -a is include .hidden directories -l is list all files in long format
+The random letters to the right are important they are x - excutible, r - read, w - write
+the reason there are more then one is that there is more then one section
+The sections are user, group, everyone. so -rw-r--r-- means you can read and write it and everyone can read it
+You might be wondering why . and .. are there, . is the current dir and .. is one dir up.
+It's time to learn about chown. chown changes the file's owner. 
+chmod changes the file's modes. The 700 mode says you can xrw the file.
+run chown $ENV{USER} progfile then run chmod 700 progfile, after that run './progfile' 
+rm will remove files.
+We no longer need the acnt.log file, remove it now. 'rm acnt.log'
+Lesson Three - Environment
+Time to learn chsh, short for change shell 
+Just type chsh. 
+You can change your password by using the 'passwd' command
+We will now simulate a passwd change. type 'passwd' to begin.
+Lesson Four - Users
+Now you can't see it right now but the password you entered earlier was encrypted.
+How a user password gets encypted and how it's used is simple.
+First a user is added with a password, it encrypts the password and stores it in the encrypted state.
+The encrypted password is stored in the master.passwd file, not to be confused with the passwd file.
+When the user logs in it takes the password entered, encrypts it then compares it against the stored encrypted password.
+Now lets add a user, type adduser to start the process.
+Add the username: athos with the password: greece
+Good, you have added the user.
+Its time to learn about removing users, remove the user 'sventek'
+Do this by typing 'rmuser sventek'. Delete everything of his.
+Good, you have added the user.
+Its time to learn about removing users, remove the user 'sventek'
+Do this by typing 'deluser sventek'. Delete everything of his.
+Lesson Five - Archives
+Say you have multiple files you want to transfer at once, how do you do it?
+Well thats simple, tar allows you to create archive files. lets tar progfile and tempfile to one file.
+Do this by typing tar -czf temp.tar.gz progfile tempfile. You can also man tar.
+So now you have a .tar.gz what do you do with it?
+Extract it to get the files out of the archive.
+Just type tar -zxvf temp.tar.gz and it will extract the files
+Lesson Six - Internet
+ifconfig will return internet configuration settings and details.
+use the command '/sbin/ifconfig' now or man ifconfig
+Use sftp to get a file from a different server, details in a moment. 
+Server: afc.com Port: 16012 Username: sfrank Password: darlingducky 
+Get the acnt.log file. 
+Lesson Seven - Processes
+the 'ps' command will show all the processes that you are running.
+type 'ps' to simulate this command
+the 'kill' command will end the process by force
+kill the prockill process by 'kill 4370'
+Lesson Eight - Packages
+FreeBSD uses ports. First we will learn how to update them, type 'portsnap fetch'
+Looking up portsnap.FreeBSD.org mirrors... 3 mirrors found.
+Fetching snapshot tag from portsnap1.FreeBSD.org... done.
+Fetching snapshot metadata... done.
+Fetching 3 metadata patches.. done.
+Applying metadata patches... done.
+Fetching 0 metadata files... done.
+Fetching 2 patches.. done.
+Applying patches... done.
+Fetching 0 new ports or files... done.
+Now we already have most of the ports in /usr/bin/ports so there is no need to extract all of the ports.
+On the first time doing this you would use 'portsnap extract' but this is not this systems first time.
+Type 'portsnap update' to update just the ports that are out of date
+Removing old files and directories... done.
+Extracting new files:
+/usr/ports/Tools/portbuild/
+/usr/ports/astro/google-earth/
+/usr/ports/devel/p5-Digest-TransformPath/
+/usr/ports/devel/php5-phing/
+/usr/ports/graphics/png/
+/usr/ports/graphics/rubygem-scruffy/
+/usr/ports/graphics/tiff/
+/usr/ports/japanese/Canna/
+/usr/ports/mail/dovecot/
+/usr/ports/mail/xpi-displayquota/
+/usr/ports/security/fwbuilder/
+/usr/ports/security/libfwbuilder/
+/usr/ports/security/vuxml/
+/usr/ports/www/gallery/
+/usr/ports/www/gallery2/
+/usr/ports/www/joomla15/
+/usr/ports/x11/kdebase3/
+Building new INDEX files...
+Now that we updated ports lets update our installed programs 'portupgrade -au'
+Again silence is gold. Now let's check our installed programs for exploits. 'portaudit -Fa'
+New database installed.
+0 problem(s) in your installed packages found.
+Now let's update the whole system. This is a two parter, 'freebsd-update fetch'
+Looking up update.FreeBSD.org mirrors... 1 mirrors found.
+Fetching metadata signature for 6.3-RELEASE from update1.FreeBSD.org... done.
+Fetching metadata index... done.
+Inspecting system... done.
+Preparing to download files... done.
+No updates needed to update system
+Well we are all up to date, if we weren't we would go on to 'freebsd-update install'
+You have completed FUSHI.
+Lesson Eight - Packages
+Debian uses apt as a package manager, lets update the apt database by typing 'apt-get update'
+Hit http://ftp.us.debian.org lenny Release.gpg
+Ign http://ftp.us.debian.org lenny/main Translation-en_US
+Hit http://http.us.debian.org lenny Release.gpg
+Ign http://http.us.debian.org lenny/main Translation-en_US
+Hit http://ftp.us.debian.org lenny Release
+Ign http://http.us.debian.org lenny/contrib Translation-en_US
+Ign http://http.us.debian.org lenny/non-free Translation-en_US
+Hit http://http.us.debian.org lenny Release
+Get:1 http://security.debian.org etch/updates Release.gpg [189B]
+Ign http://security.debian.org etch/updates/main Translation-en_US
+Hit http://ftp.us.debian.org lenny/main Packages/DiffIndex
+Hit http://http.us.debian.org lenny/main Packages/DiffIndex
+Ign http://security.debian.org etch/updates/contrib Translation-en_US
+Get:2 http://security.debian.org etch/updates Release [37.6kB]
+Hit http://ftp.us.debian.org lenny/main Sources/DiffIndex
+Hit http://http.us.debian.org lenny/contrib Packages/DiffIndex
+Hit http://http.us.debian.org lenny/non-free Packages/DiffIndex
+Ign http://security.debian.org etch/updates/main Packages/DiffIndex
+Ign http://security.debian.org etch/updates/contrib Packages/DiffIndex
+Ign http://security.debian.org etch/updates/main Sources/DiffIndex
+Ign http://security.debian.org etch/updates/contrib Sources/DiffIndex
+Get:3 http://security.debian.org etch/updates/main Packages [290kB]
+Hit http://security.debian.org etch/updates/contrib Packages
+Get:4 http://security.debian.org etch/updates/main Sources [45.4kB]
+Hit http://security.debian.org etch/updates/contrib Sources
+Fetched 373kB in 0s (44.7kB/s)
+Reading package lists...
+Now that you have updated the apt database lets make sure all of our packages are still up to date. 'apt-get upgrade'
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+The packages are up to date but is the system still up to date? To find out run 'apt-get dist-upgrade'
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+Calculating upgrade... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+You have completed FUSHI.
+
+------------------Menu------------------
+Welcome to fushi, please use the exit command at any time to leave.
+Note that fushi will look like your a real bash shell.
+To skip to a part of fushi type the lesson name or number. Type back to get back to the main menu.
+
+------------------Hints------------------
+Reminder:
+. means the current dir and .. means one dir up.
+Hint: just hit enter if you don't understand it
