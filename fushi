@@ -85,28 +85,7 @@ EOF
 # -------------------------------------------------------------------------------
 
 ## os
-sub os {
-	los:{
-		print "What operating system would you like to learn?\n\n1. Debian\n2. FreeBSD\n> ";
-		my $os = <STDIN>;
-		if (!defined($os)) { 
-			exit(); 
-		}
-		chomp $os;
-		if ( $os =~ /debian/i or $os =~ "1" ) {
-			print "\n";
-			return $os;
-		}
-		if ( $os =~ /freebsd/i or $os =~ "2" ) {
-			print "\n";
-			return $os;
-		}
-		else {
-			redo los
-		}
-	}
-}
-my $os = os();
+my $os = "debian";
 # -------------------------------------------------------------------------------
 
 # subroutines for bash prompt
