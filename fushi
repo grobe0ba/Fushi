@@ -9,12 +9,6 @@ use FindBin qw($Bin);
 $SIG{INT} = 'IGNORE';
 $| = 1;
 
-#~      ##### Unclassified #####
-
-#~      This version of Fushi has been modified for the US Navy's Tactical Computer Network Operator Course.
-#~      All contents of this file and the seperate questions file contain no classified information.
-
-
 # ------------------------------------------------------------------------------------------
 
 #~ License
