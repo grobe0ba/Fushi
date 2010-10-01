@@ -1,16 +1,23 @@
 #!/usr/bin/perl
-# safety net
+
+# module load
 use strict;
 use warnings;
 use Term::ReadKey;
 use Term::ANSIColor;
+use FindBin qw($Bin);
 $SIG{INT} = 'IGNORE';
 $| = 1;
 
-#~	##### Unclassified #####
+#~      ##### Unclassified #####
 
-#~	This version of Fushi has been modified for the US Navy's Tactical Computer Network Operator Course.
-#~	All contents of this file and the seperate questions file contain no classified information.
+#~      This version of Fushi has been modified for the US Navy's Tactical Computer Network Operator Course.
+#~      All contents of this file and the seperate questions file contain no classified information.
+
+
+# ------------------------------------------------------------------------------------------
+
+#~ License
 
 #~ Copyright (C) 2010, Michael James Brune and Byron Atticus Grobe
 #~ All rights reserved.
@@ -96,19 +103,29 @@ EOF
 
 ## os
 my $os = "debian";
+
 # -------------------------------------------------------------------------------
 
-# subroutines for bash prompt
+## subroutines for bash prompt
 sub bash {
 	my ($cwd) = @_;
 	my $hostname = `hostname`; 
 	chomp $hostname;
 	$hostname =~ s/\..*//;
-	if ( $os =~ /freebsd/i or $os =~ "2" ) {
-		print "\n[$ENV{USER}",'@', "$hostname", " ", $cwd, ']$ ';
-	}
-	if ( $os =~ /debian/i or $os =~ "1" ) {
-		print "\n$ENV{USER}",'@', "$hostname", ":", $cwd, '$ ';
+	print "\n$ENV{USER}",'@', "$hostname", ":", $cwd, '$ ';
+}
+# -------------------------------------------------------------------------------
+
+## language file support
+my $language = "$Bin/english";
+open my $fh, '<', "$language" or findlang() or die;
+sub findlang {
+	print "Error: Where is the language file (type 'exit' to cancel)\n: ";
+	$language = <STDIN>;
+	chomp $language;
+	if ( $language =~ /exit/i ) {
+		print "\n--------NOW LEAVING FUSHI--------\n";
+		exit();
 	}
 }
 # -------------------------------------------------------------------------------
@@ -116,7 +133,7 @@ sub bash {
 ## subroutine for simulating write.
 sub simtype {
   my %lines = map { $_ => 1 } @_;
-  open my $fh, '<', "english" or die "Can't read language file: $!";
+  open my $fh, '<', "$language" or findlang or die;
   while (my $line = <$fh>) {
 	print color 'white on_blue';
     print $line if $lines{$.};
@@ -128,8 +145,10 @@ sub simtype {
 ## menu
 sub menu {
 	simtype (161..162);
-	print "\nMenu:\n\n1. Start (recommended)\n2. Lessons\n3. Credits";
 	meu:{
+		print color 'black on_green';
+		print "\nMenu:\n\n1. Start (recommended)\n2. Lessons\n3. Credits\n";
+		print color 'reset';
 		bash "/fushi/menu";
 		my $menu = <STDIN>;  
 		if (!defined($menu)) { 
@@ -142,7 +161,9 @@ sub menu {
 		if ( $menu =~ /lessons/i or $menu =~ "2" ) {
 			list:{
 				simtype (163);
+				print color 'black on_green';
 				print "\n\n1. Navigation\n2. Files\n3. Environment\n4. Users\n5. Archives\n6. Internet\n7. Processes\n8. Packages";
+				print color 'reset';
 				bash "/fushi/menu";
 				my $lessons = <STDIN>;
 				if (!defined($lessons)) { 
@@ -170,16 +191,10 @@ sub menu {
 				if ( $lessons =~ /processes/i or $lessons =~ "7" ) {
 					ps();
 				}
-				if ( $lessons =~ /ports/i or $lessons =~ "8" ) {
-					if ( $os =~ /freebsd/i or $os =~ "2" ) { 
-						portsnap();
-					}
-					if ( $os =~ /debian/i or $os =~ "1" ) {
-						apt();
-					}
+				if ( $lessons =~ /packages/i or $lessons =~ "8" ) {
+					apt();
 				}
 				if ( $lessons =~ /back/i ) {
-					print "The commands are:\nstart (recommended)\nlessons\ncredits";
 					redo meu;
 				}
 				if ( $menu eq "exit" ) {
@@ -192,7 +207,7 @@ sub menu {
 			}
 		}
 		if ( $menu =~ /credits/i or $menu =~ "3" ) {
-			print 'Created by James "Pulpie" Michael http://pulpie.ath.cx jamesthefishy@gmail.com', "\nBeta version: .040";
+			print 'Created by Michael James Brune and Byron Atticus Grobe.';
 			redo meu;
 		}
 		if ( $menu eq "exit" ) {
@@ -200,7 +215,6 @@ sub menu {
 			exit();
 		}
 		else {
-			print "The commands are:\nstart (recommended)\nlessons\ncredits";
 			redo meu;
 		}	
 	}
@@ -642,7 +656,10 @@ sub review {
 ## chown, changing owner of progfile.
 sub mman {
 	bash "~/tempdir";
-	simtype (29..31);
+	simtype (29..30);
+	print color 'white on_blue';
+	print "run chown $ENV{USER} progfile then run chmod 700 progfile, after that run './progfile'";
+	print color 'reset';
 	con:{
 		bash "~/tempdir";
 		my $chown = <STDIN>;  
@@ -930,12 +947,7 @@ sub finishme {
 			print "\nOK? (yes/no): ";
 			print "\nadduser: INFO: Successfully added (",$username,") to the user database.";
 			print "\nGoodbye!\n";
-			if ( $os =~ /freebsd/i or $os =~ "2" ) { 
-				rmuser();
-			}
-			if ( $os =~ /debian/i or $os =~ "1" ) {
-				deluser();
-			}
+			deluser();
 		}
 		else { 
 			print "Passwords did not match or were not greece, the requested password.\n"; 
@@ -982,49 +994,6 @@ sub deluser {
 		else { 
 			print "type 'deluser sventek'";  
 			redo deluser;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## removing a user for freebsd.
-sub rmuser { 
-	simtype (47..49);
-	rmuser:{
-		bash "~/tempdir";
-		my $rmuser = <STDIN>;  
-		if (!defined($rmuser)) { 
-			exit();
-		}
-		chomp $rmuser;
-		if ( $rmuser eq "rmuser sventek" ) { 
-			print "\nMatching password entry\n\nsventek:*:1320:1320::0:0:User &:/home/sventek:/bin/sh\n\n";
-			confirm:{
-				print "\nIs this the entry you wish to remove? "; 
-				chomp(my $confirm = <STDIN>);
-				if ( $confirm =~ /yes/i or $confirm eq "y" ) { 
-					home(); 
-				}
-				if ( $confirm eq "y" ) { 
-					home(); 
-				}
-				else { 
-				print "type yes"; 
-				redo confirm; 
-				}
-			}
-		}
-		if ( $rmuser eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit();
-		}
-		if ( $rmuser eq "man deluser" ) { 
-			system("man deluser"); 
-			redo rmuser;
-		}
-		else { 
-			print "type 'rmuser sventek'";  
-			redo rmuser;
 		}
 	}
 }
@@ -1273,12 +1242,7 @@ sub kil {
 		}
 		chomp $command;
 		if ( $command eq "kill 4370" ) { 
-			if ( $os =~ /freebsd/i or $os =~ "2" ) { 
-				portsnap();
-			}
-			if ( $os =~ /debian/i or $os =~ "1" ) {
-				apt();
-			}
+			apt();
 		}
 		if ( $command eq "exit" ) {
 			print "\n--------NOW LEAVING FUSHI--------\n";
@@ -1287,135 +1251,6 @@ sub kil {
 		else {
 			print "use 'ps'";
 			redo killed;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## portsnap - fetch
-sub portsnap {
-	simtype (71..72);
-	port:{
-		bash "~/tempdir";
-		my $command = <STDIN>;  
-		if (!defined($command)) { 
-			exit();
-		}
-		chomp $command;
-		if ( $command eq "portsnap fetch" ) {
-			simtype (73..81);
-			update();
-		}
-		if ( $command eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit();
-		}
-		else {
-			print "type 'portsnap fetch'";
-			redo port;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## portsnap - update
-sub update {
-	simtype (82..84);
-	snap:{
-		bash "~/tempdir";
-		my $command = <STDIN>;  
-		if (!defined($command)) { 
-			exit();
-		}
-		chomp $command;
-		if ( $command eq "portsnap update" ) {
-			simtype (85..104);
-			portupgrade();
-		}
-		if ( $command eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit();
-		}
-		else {
-			print "type 'portsnap update'";
-			redo snap;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## portupgrade
-sub portupgrade {
-	simtype (105);
-	portu:{
-		bash "~/tempdir";
-		my $command = <STDIN>;  
-		if (!defined($command)) { 
-			exit();
-		}
-		chomp $command;
-		if ( $command eq "portupgrade -au" ) {
-			audit();
-		}
-		if ( $command eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit();
-		}
-		else {
-			print "type 'portupgrade -au'";
-			redo portu;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## portaudit
-sub audit {
-	simtype (106);
-	portu:{
-		bash "~/tempdir";
-		my $command = <STDIN>;  
-		if (!defined($command)) { 
-			exit();
-		}
-		chomp $command;
-		if ( $command eq "portaudit -Fa" ) {
-			simtype (107..108);
-			freeupdate();
-		}
-		if ( $command eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit;
-		}
-		else {
-			print "type 'portaudit -Fa'";
-			redo portu;
-		}
-	}
-}
-
-# -------------------------------------------------------------------------------
-## FreeBSD-update
-sub freeupdate {
-	simtype (109);
-	portu:{
-		bash "~/tempdir";
-		my $command = <STDIN>;  
-		if (!defined($command)) { 
-			exit();
-		}
-		chomp $command;
-		if ( $command eq "freebsd-update fetch" ) {
-			simtype (110-117);
-			menu();
-		}
-		if ( $command eq "exit" ) {
-			print "\n--------NOW LEAVING FUSHI--------\n";
-			exit();
-		}
-		else {
-			print "type 'freebsd-update fetch'";
-			redo portu;
 		}
 	}
 }
